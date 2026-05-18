@@ -11,7 +11,7 @@ from lib.streamlit_analytics2.main import (
 
 
 def test_load_persisted_analytics_snapshot_merges_multiple_session_records(tmp_path: Path) -> None:
-    log_path = tmp_path / "usage_log_2026-05-15.txt"
+    log_path = tmp_path / "logs" / "usage" / "usage_log_2026-05-15.txt"
 
     record_one = {
         "__streamlit_analytics_record_type__": "session_snapshot",
@@ -52,6 +52,7 @@ def test_load_persisted_analytics_snapshot_merges_multiple_session_records(tmp_p
         },
     }
 
+    log_path.parent.mkdir(parents=True, exist_ok=True)
     log_path.write_text(
         "\n".join([json.dumps(record_one), json.dumps(record_two)]),
         encoding="utf-8",
@@ -74,7 +75,7 @@ def test_load_persisted_analytics_snapshot_merges_multiple_session_records(tmp_p
 
 
 def test_persisted_snapshot_round_trips_for_restart_loading(tmp_path: Path) -> None:
-    log_path = tmp_path / "usage_log_2026-05-15.txt"
+    log_path = tmp_path / "logs" / "usage" / "usage_log_2026-05-15.txt"
     yesterday = str(datetime.date.today() - datetime.timedelta(days=1))
     today = str(datetime.date.today())
     snapshot = {
@@ -96,3 +97,56 @@ def test_persisted_snapshot_round_trips_for_restart_loading(tmp_path: Path) -> N
     loaded = _load_persisted_analytics_snapshot(log_path)
 
     assert loaded == snapshot
+
+
+def test_persisted_snapshot_appends_session_records(tmp_path: Path) -> None:
+    log_path = tmp_path / "logs" / "usage" / "usage_log_2026-05-15.txt"
+    yesterday = str(datetime.date.today() - datetime.timedelta(days=1))
+    today = str(datetime.date.today())
+    session_one = {
+        "loaded_from_firestore": False,
+        "total_pageviews": 1,
+        "total_script_runs": 1,
+        "total_time_seconds": 2.5,
+        "per_day": {
+            "days": [yesterday, today],
+            "pageviews": [0, 1],
+            "script_runs": [0, 1],
+        },
+        "widgets": {"View Mode": {"Table": 1}},
+        "start_time": "18 May 2026, 12:00:00",
+    }
+    session_two = {
+        "loaded_from_firestore": False,
+        "total_pageviews": 1,
+        "total_script_runs": 2,
+        "total_time_seconds": 4.0,
+        "per_day": {
+            "days": [yesterday, today],
+            "pageviews": [0, 1],
+            "script_runs": [0, 2],
+        },
+        "widgets": {"View Mode": {"Chart": 1}},
+        "start_time": "18 May 2026, 13:00:00",
+    }
+
+    _persist_analytics_snapshot(log_path, session_one)
+    _persist_analytics_snapshot(log_path, session_two)
+
+    lines = log_path.read_text(encoding="utf-8").splitlines()
+
+    assert len(lines) == 2
+    assert json.loads(lines[0])["data"] == session_one
+    assert json.loads(lines[1])["data"] == session_two
+
+    loaded = _load_persisted_analytics_snapshot(log_path)
+
+    assert loaded is not None
+    assert loaded["total_pageviews"] == 2
+    assert loaded["total_script_runs"] == 3
+    assert loaded["total_time_seconds"] == 6.5
+    assert loaded["per_day"]["days"] == [yesterday, today]
+    assert loaded["per_day"]["pageviews"] == [0, 2]
+    assert loaded["per_day"]["script_runs"] == [0, 3]
+    assert loaded["widgets"]["View Mode"]["Table"] == 1
+    assert loaded["widgets"]["View Mode"]["Chart"] == 1
