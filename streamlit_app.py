@@ -26,14 +26,15 @@ from src.shared.analytics_adapter import (
 from src.shared.perf import render_perf_panel, reset_perf_metrics
 
 DEFAULTS: DefaultConfigs = DefaultConfigs()
-USAGE_LOG_PATH = Path("usage_log_2026-05-15.txt")
+LOGS_DIR = Path("logs")
+APP_LOG_DIR = LOGS_DIR / "app"
+USAGE_LOG_PATH = LOGS_DIR / "usage" / "usage_log_2026-05-15.txt"
 logger = logging.getLogger(__name__)
 
 
 def _configure_daily_app_logger() -> Path:
-    logs_dir = Path("logs")
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    log_path = (logs_dir / f"app_{datetime.now().strftime('%Y%m%d')}.log").resolve()
+    APP_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    log_path = (APP_LOG_DIR / f"app_{datetime.now().strftime('%Y%m%d')}.log").resolve()
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)

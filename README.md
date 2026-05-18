@@ -52,8 +52,8 @@ python scripts/app_launcher.py
 ```
 
 ## Troubleshooting
-- Logs: Check `%LOCALAPPDATA%/CylinderViz/logs/` for files like `cylinderviz_YYYYMMDD_HHMMSS.log`.
-- Analytics state: Usage tracking uses the repo-local `usage_log_2026-05-15.txt` cumulative snapshot. It is loaded on app start and saved back on app start/stop so pageviews persist across restarts.
+- Logs: Check `logs/app/` for daily app logs like `app_YYYYMMDD.log` and `logs/usage/` for the append-only usage snapshot file.
+- Analytics state: Usage tracking uses the repo-local `logs/usage/usage_log_2026-05-15.txt` file. Each browser session appends a session snapshot, and the file is reloaded on app start so pageviews persist across restarts.
 - Port busy: Change the port in [scripts/app_launcher.py](scripts/app_launcher.py#L63-L74) and rebuild, or stop the process using 8501.
 - Antivirus: Some AV tools flag PyInstaller onefile EXEs. Code-signing and/or excluding the file may be needed in corporate environments.
 
@@ -72,7 +72,8 @@ Top-level folders are grouped by purpose to keep root clean and predictable:
 - `qa_automation/`: QA smoke test scripts and docs
 - `tests/`: unit tests
 - `data/`: local sample/input datasets (ignored in git)
-- `logs/`: local runtime logs/artifacts (ignored in git)
+- `logs/app/`: daily app runtime logs (ignored in git)
+- `logs/usage/`: append-only analytics usage snapshots (ignored in git)
 - `notebooks/`: exploratory notebooks (ignored in git)
 - `examples/`: local scratch examples (e.g., temporary Streamlit snippets)
 - `archive/`: local backups/snapshots (ignored in git)

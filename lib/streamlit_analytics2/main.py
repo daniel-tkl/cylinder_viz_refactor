@@ -30,6 +30,7 @@ from .state import data, reset_data
 
 _PERSISTENCE_RECORD_TYPE_KEY = "__streamlit_analytics_record_type__"
 _PERSISTENCE_RECORD_TYPE_SESSION = "session_snapshot"
+_SESSION_PERSISTENCE_FLAG = "_sa2_usage_snapshot_persisted"
 
 
 def _empty_analytics_snapshot() -> Dict[str, Any]:
@@ -199,9 +200,7 @@ def _append_session_snapshot(path: Path, session_snapshot: Dict[str, Any]) -> No
 
 
 def _persist_analytics_snapshot(path: Path, snapshot: Dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as file_handle:
-        json.dump(snapshot, file_handle)
+    _append_session_snapshot(path, snapshot)
 
 
 def update_session_stats(data_dict: Dict[str, Any]):
@@ -338,12 +337,15 @@ def start_tracking(
         st.session_state.state_dict = {}
     if "last_time" not in st.session_state:
         st.session_state.last_time = datetime.datetime.now()
+    if _SESSION_PERSISTENCE_FLAG not in st.session_state:
+        st.session_state[_SESSION_PERSISTENCE_FLAG] = False
     _track_user()
 
-    # Persist immediately so a new browser/session updates the stored pageview
-    # count even before a clean shutdown occurs.
-    if load_from_json is not None:
-        _persist_analytics_snapshot(Path(load_from_json), data)
+    # Persist the per-session snapshot immediately so a new browser/session is
+    # captured as soon as the run starts, while still appending only once.
+    if load_from_json is not None and not st.session_state[_SESSION_PERSISTENCE_FLAG]:
+        _persist_analytics_snapshot(Path(load_from_json), ss.session_data)
+        st.session_state[_SESSION_PERSISTENCE_FLAG] = True
 
     # widgets.monkey_patch()
     # Monkey-patch streamlit to call the wrappers above.
@@ -536,8 +538,9 @@ def stop_tracking(
 
     # Assuming 'data' is your data to be saved and 'save_to_json' is the path
     # to your json file.
-    if save_to_json is not None:
-        _persist_analytics_snapshot(Path(save_to_json), data)
+    if save_to_json is not None and not st.session_state.get(_SESSION_PERSISTENCE_FLAG, False):
+        _persist_analytics_snapshot(Path(save_to_json), ss.session_data)
+        st.session_state[_SESSION_PERSISTENCE_FLAG] = True
 
         if verbose:
             print("Storing results to file:", save_to_json)
