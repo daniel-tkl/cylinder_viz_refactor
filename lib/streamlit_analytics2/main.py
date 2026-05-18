@@ -373,7 +373,15 @@ def stop_tracking(
 
         @st.dialog("Streamlit-Analytics2", width="large")
         def show_sa2(data, reset_data, unsafe_password):
-            display.show_results(data, reset_data, unsafe_password)
+
+            tab1, tab2 = st.tabs(["Data", "Config"])
+
+            with tab1:
+                display.show_results(data, reset_data, unsafe_password)
+
+            with tab2:
+                config.show_config()
+
         show_sa2(data, reset_data, unsafe_password)
 
 
@@ -447,7 +455,7 @@ def track(
         )
 
 
-if __name__ == "streamlit_analytics2.main":
+if __name__.endswith(".main"):
     reset_data()
 
     # widgets.copy_original()

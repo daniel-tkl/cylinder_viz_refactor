@@ -13,6 +13,89 @@ secondaryBackgroundColor="#2E3D63"
 textColor="#EEEEEE"
 font="sans serif" */
 
+:root {
+    --font-ui: "Segoe UI", Calibri, "Trebuchet MS", sans-serif;
+    --font-heading: "Bahnschrift", "Segoe UI Semibold", "Trebuchet MS", sans-serif;
+}
+
+.stApp,
+.stApp p,
+.stApp label,
+.stApp li,
+.stApp td,
+.stApp th,
+.stApp input,
+.stApp textarea,
+.stApp button,
+.stApp select {
+    font-family: var(--font-ui) !important;
+}
+
+/* Keep icon ligatures rendered as icons, not raw words like "add" or "arrow". */
+.material-symbols-outlined,
+.material-symbols-rounded,
+.material-icons,
+[class*="material-symbols"],
+[data-testid="stIconMaterial"] {
+    font-family: "Material Symbols Rounded", "Material Symbols Outlined", "Material Icons" !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+}
+
+[data-testid="collapsedControl"] span,
+[data-testid="stSidebarCollapsedControl"] span,
+[data-testid="stSidebarCollapseButton"] span,
+[data-testid="stSidebarCollapseButton"] i {
+    font-family: "Material Symbols Rounded", "Material Symbols Outlined", "Material Icons" !important;
+    letter-spacing: normal !important;
+}
+
+.stApp {
+    font-size: 15px;
+    line-height: 1.4;
+    font-weight: 400;
+}
+
+[data-testid="stSidebar"] * {
+    letter-spacing: 0.01em;
+}
+
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3,
+.app-title {
+    font-family: var(--font-heading) !important;
+    font-weight: 650;
+}
+
+input,
+textarea,
+select,
+button,
+[data-testid="stDataFrame"] {
+    font-size: 0.96rem;
+}
+
+[data-testid="stDataFrame"] * {
+    font-variant-numeric: tabular-nums;
+}
+
+section[data-testid="stFileUploader"] [data-testid="stWidgetLabel"] p,
+[data-testid="stSidebar"] details[data-testid="stExpander"] summary p {
+    text-shadow: none !important;
+    letter-spacing: 0.01em !important;
+    font-family: var(--font-ui) !important;
+    font-weight: 600;
+}
+
+section[data-testid="stFileUploader"] [data-testid="stWidgetLabel"] p:not(:first-child),
+[data-testid="stSidebar"] details[data-testid="stExpander"] summary p:not(:first-child) {
+    display: none !important;
+}
+
 
 /* Header */
 /* .streamlit-wide header {
@@ -23,6 +106,22 @@ font="sans serif" */
 } */
 
 /* Sidebar */
+[data-testid="stSidebar"] {
+    visibility: visible !important;
+    transform: none !important;
+}
+
+[data-testid="stSidebar"][aria-expanded="false"],
+[data-testid="stSidebar"][aria-expanded="true"] {
+    min-width: 20rem !important;
+    max-width: 20rem !important;
+    transform: translateX(0) !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    visibility: visible !important;
+}
+
 .appview-container > section:nth-child(1) {
     background-color: #2E3D63;
 }
@@ -40,7 +139,12 @@ font="sans serif" */
     /* background: bottom right/contain no-repeat url(/assets/images/img_support.svg); */
 }
 .appview-container > section[tabindex="0"] .block-container {
-    padding: 4rem;
+    padding: 2.4rem 4rem 4rem;
+}
+
+/* Streamlit newer DOM target: ensure top content actually starts higher */
+[data-testid="stAppViewContainer"] .main .block-container {
+    padding-top: 1rem !important;
 }
 .menu-title {
     padding-top: 0;
@@ -63,6 +167,92 @@ font="sans serif" */
     padding: 0.5rem;
     border-left: 4px solid #FF7F00;
     border-radius: 4px;
+}
+
+.app-title {
+    margin: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0.8rem !important;
+    position: relative !important;
+    top: -2.8rem !important;
+    text-align: center;
+    letter-spacing: 0.07em;
+    line-height: 1.1;
+    font-size: clamp(1.8rem, 1.2rem + 1.35vw, 2.55rem);
+    font-weight: 700;
+    font-family: var(--font-heading) !important;
+    text-transform: uppercase;
+    color: #F7FBFF;
+    text-shadow: 0 0 12px rgb(92 197 205 / 55%);
+}
+
+.app-title span {
+    display: inline-block;
+    padding: 0.24rem 0.95rem 0.34rem;
+    border: 1px solid rgb(92 197 205 / 52%);
+    border-bottom-color: rgb(92 197 205 / 72%);
+    background: linear-gradient(180deg, rgb(17 31 53 / 62%), rgb(17 31 53 / 38%));
+    box-shadow: inset 0 0 0 1px rgb(92 197 205 / 10%);
+    border-radius: 999px;
+    position: relative;
+}
+
+[data-testid="stMarkdownContainer"] h2 {
+    margin: 0.35rem 0 1rem;
+    text-align: center;
+    letter-spacing: 0.045em;
+    line-height: 1.2;
+    font-size: clamp(1.2rem, 0.98rem + 0.85vw, 1.7rem);
+    font-weight: 650;
+    font-family: var(--font-heading) !important;
+    color: #EAF6FF;
+    text-shadow: 0 0 8px rgb(92 197 205 / 34%);
+}
+
+[data-testid="stMarkdownContainer"] h2::after {
+    content: "";
+    display: block;
+    width: clamp(140px, 22vw, 260px);
+    height: 1px;
+    margin: 0.4rem auto 0;
+    background: linear-gradient(90deg, rgb(92 197 205 / 0%), rgb(92 197 205 / 58%), rgb(92 197 205 / 0%));
+}
+
+[data-testid="stMarkdownContainer"] h3 {
+    margin: 0.25rem 0 0.85rem;
+    text-align: center;
+    letter-spacing: 0.03em;
+    line-height: 1.25;
+    font-size: clamp(1.02rem, 0.9rem + 0.55vw, 1.3rem);
+    font-weight: 600;
+    font-family: var(--font-heading) !important;
+    color: #DCEBFA;
+    text-shadow: 0 0 6px rgb(92 197 205 / 28%);
+}
+
+[data-testid="stMarkdownContainer"] h3::after {
+    content: "";
+    display: block;
+    width: clamp(96px, 14vw, 150px);
+    height: 1px;
+    margin: 0.3rem auto 0;
+    background: linear-gradient(90deg, rgb(92 197 205 / 0%), rgb(92 197 205 / 42%), rgb(92 197 205 / 0%));
+}
+
+.empty-state-message {
+    max-width: 760px;
+    margin: 0.45rem auto 1.1rem;
+    padding: 0.7rem 1rem;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #d8ecff;
+    background: linear-gradient(180deg, rgb(17 31 53 / 58%), rgb(17 31 53 / 36%));
+    border: 1px solid rgb(92 197 205 / 38%);
+    border-left: 4px solid rgb(92 197 205 / 62%);
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgb(92 197 205 / 14%);
 }
 
 /* Footer */

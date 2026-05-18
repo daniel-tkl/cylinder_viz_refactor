@@ -17,11 +17,18 @@ A Streamlit web application for uploading, filtering, and visualizing time serie
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ### 2. Run the app
 ```powershell
 streamlit run streamlit_app.py
+```
+
+For a repo-local Windows launcher:
+
+```powershell
+run_app.bat
 ```
 
 ## Build Windows EXE
@@ -53,3 +60,59 @@ python scripts/app_launcher.py
 - Ensure your dataset includes an identifier (e.g., `Machine No` or `Device SN`) and a datetime column.
 - Measurement columns must follow `Module/Item/Variant` naming.
 - Thresholds are calculated relative to averaged daily values per variant.
+
+## Modular Architecture
+
+The codebase is organized with domain modules in `src/cylinder_domain` and generic shared utilities in `src/shared`.
+
+- `src/cylinder_domain/parsing/column_detection.py`: ID and datetime column detection logic
+- `src/cylinder_domain/parsing/schema.py`: parsing dataclasses and hierarchy builders
+- `src/cylinder_domain/parsing/parsing.py`: high-level dataset parsing orchestration
+- `src/cylinder_domain/aggregation/aggregation.py`: daily aggregation and baseline calculation
+- `src/cylinder_domain/aggregation/thresholds.py`: threshold and variant-family business rules
+- `src/cylinder_domain/aggregation/variant_planning.py`: variant grouping and Motion Time column resolution
+- `src/cylinder_domain/visualization/visualization.py`: Plotly figure construction
+
+- `src/shared/data_io.py`: uploaded file readers
+- `src/shared/assets.py`: text/binary asset loaders
+- `src/shared/dataframe_styles.py`: dataframe style helpers
+- `src/shared/view.py`: Streamlit rendering helpers composed from utility modules
+
+### Package Diagram
+
+```mermaid
+flowchart TD
+	A[streamlit_app.py] --> B[src.cylinder_app]
+	B --> C[src.cylinder_domain]
+	B --> D[src.shared]
+	B --> E[src.config]
+	C --> C1[parsing]
+	C --> C2[aggregation]
+	C --> C3[visualization]
+```
+
+### Dependency Direction
+
+- UI code in `src/cylinder_app` should depend on `cylinder_domain` and `shared`.
+- `cylinder_domain` stays Streamlit-free and focused on domain logic.
+- `shared` low-level modules should not depend on UI modules.
+
+### Run Tests
+
+```powershell
+pytest -q
+```
+
+### QA Automation (Streamlit Smoke)
+
+Use the dedicated QA scripts in [qa_automation/README.md](qa_automation/README.md) to run an automated Streamlit health smoke check.
+
+```powershell
+qa_automation/run_qa.ps1
+```
+
+### Packaging Notes
+
+- `pyproject.toml` defines minimal build metadata and test discovery.
+- `src/__init__.py` makes the `src.*` import path explicit.
+- `run_app.bat` launches the current repo checkout instead of using a machine-specific absolute path.
