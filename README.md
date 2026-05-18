@@ -53,6 +53,7 @@ python scripts/app_launcher.py
 
 ## Troubleshooting
 - Logs: Check `%LOCALAPPDATA%/CylinderViz/logs/` for files like `cylinderviz_YYYYMMDD_HHMMSS.log`.
+- Analytics state: Usage tracking uses the repo-local `usage_log_2026-05-15.txt` cumulative snapshot. It is loaded on app start and saved back on app start/stop so pageviews persist across restarts.
 - Port busy: Change the port in [scripts/app_launcher.py](scripts/app_launcher.py#L63-L74) and rebuild, or stop the process using 8501.
 - Antivirus: Some AV tools flag PyInstaller onefile EXEs. Code-signing and/or excluding the file may be needed in corporate environments.
 
@@ -60,6 +61,23 @@ python scripts/app_launcher.py
 - Ensure your dataset includes an identifier (e.g., `Machine No` or `Device SN`) and a datetime column.
 - Measurement columns must follow `Module/Item/Variant` naming.
 - Thresholds are calculated relative to averaged daily values per variant.
+
+## Project Structure
+
+Top-level folders are grouped by purpose to keep root clean and predictable:
+
+- `src/`: application and domain code
+- `assets/`: static UI and packaging assets (`custom.css`, icons, images, splash)
+- `scripts/`: developer tooling (launcher, build helper, smoke utility)
+- `qa_automation/`: QA smoke test scripts and docs
+- `tests/`: unit tests
+- `data/`: local sample/input datasets (ignored in git)
+- `logs/`: local runtime logs/artifacts (ignored in git)
+- `notebooks/`: exploratory notebooks (ignored in git)
+- `examples/`: local scratch examples (e.g., temporary Streamlit snippets)
+- `archive/`: local backups/snapshots (ignored in git)
+
+Keep entry files in root (`streamlit_app.py`, `run_app.bat`, `README.md`, `pyproject.toml`) and avoid adding generated artifacts there.
 
 ## Modular Architecture
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import perf_counter
 from typing import Any
 
 import pandas as pd
@@ -19,6 +20,11 @@ class AppDataContext:
     parsed: ParseResult
     selected_models: list[str]
     status_placeholder: Any
+    source_file_name: str
+    source_rows: int
+    filtered_rows: int
+    load_ms: float
+    parse_ms: float
 
 
 @st.cache_data(show_spinner=False)
@@ -50,24 +56,34 @@ def prepare_app_data(defaults: DefaultConfigs) -> AppDataContext:
         st.info("Please upload a file to proceed.")
         st.stop()
 
+    load_started = perf_counter()
     try:
         df = _load_uploaded_dataframe(uploaded_file.name, uploaded_file.getvalue())
     except Exception as exc:  # noqa: BLE001
         st.error(f"Failed to read file: {exc}")
         st.stop()
+    load_ms = (perf_counter() - load_started) * 1000.0
 
     st.session_state["data"] = df
+    source_rows = int(len(df))
     selected_models, selected_df = build_model_selection(defaults=defaults, df=df)
 
+    parse_started = perf_counter()
     try:
         parsed = _parse_dataset_cached(selected_df)
     except Exception as exc:  # noqa: BLE001
         st.error(f"Parsing error: {exc}")
         st.stop()
+    parse_ms = (perf_counter() - parse_started) * 1000.0
 
     return AppDataContext(
         df=selected_df,
         parsed=parsed,
         selected_models=selected_models,
         status_placeholder=status_placeholder,
+        source_file_name=str(uploaded_file.name),
+        source_rows=source_rows,
+        filtered_rows=int(len(selected_df)),
+        load_ms=load_ms,
+        parse_ms=parse_ms,
     )

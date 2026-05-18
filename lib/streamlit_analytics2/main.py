@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional, Union
 import streamlit as st
 from streamlit import session_state as ss
 
-from . import config, display, firestore, utils, widgets  # noqa: F811 F401
+from . import display, firestore, utils, widgets  # noqa: F811 F401
 from . import wrappers as _wrap
 from .state import data, reset_data
 
@@ -26,6 +26,182 @@ from .state import data, reset_data
 # )
 # Uncomment this during testing
 # logging.info("SA2: Streamlit-analytics2 successfully imported")
+
+
+_PERSISTENCE_RECORD_TYPE_KEY = "__streamlit_analytics_record_type__"
+_PERSISTENCE_RECORD_TYPE_SESSION = "session_snapshot"
+
+
+def _empty_analytics_snapshot() -> Dict[str, Any]:
+    yesterday = str(datetime.date.today() - datetime.timedelta(days=1))
+    return {
+        "loaded_from_firestore": False,
+        "total_pageviews": 0,
+        "total_script_runs": 0,
+        "total_time_seconds": 0,
+        "per_day": {
+            "days": [yesterday],
+            "pageviews": [0],
+            "script_runs": [0],
+        },
+        "widgets": {},
+        "start_time": datetime.datetime.now().strftime("%d %b %Y, %H:%M:%S"),
+    }
+
+
+def _coerce_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _parse_start_time(value: Any) -> datetime.datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        return datetime.datetime.strptime(value, "%d %b %Y, %H:%M:%S")
+    except ValueError:
+        return None
+
+
+def _merge_daily_counts(target: Dict[str, list[Any]], source: Dict[str, Any]) -> None:
+    source_days = [str(day) for day in source.get("days", [])]
+    source_pageviews = list(source.get("pageviews", []))
+    source_script_runs = list(source.get("script_runs", []))
+
+    target_days = target.setdefault("days", [])
+    target_pageviews = target.setdefault("pageviews", [])
+    target_script_runs = target.setdefault("script_runs", [])
+    day_to_index = {str(day): idx for idx, day in enumerate(target_days)}
+
+    for idx, day in enumerate(source_days):
+        pageviews = _coerce_int(source_pageviews[idx] if idx < len(source_pageviews) else 0)
+        script_runs = _coerce_int(source_script_runs[idx] if idx < len(source_script_runs) else 0)
+        if day in day_to_index:
+            target_idx = day_to_index[day]
+            target_pageviews[target_idx] = _coerce_int(target_pageviews[target_idx]) + pageviews
+            target_script_runs[target_idx] = _coerce_int(target_script_runs[target_idx]) + script_runs
+        else:
+            day_to_index[day] = len(target_days)
+            target_days.append(day)
+            target_pageviews.append(pageviews)
+            target_script_runs.append(script_runs)
+
+
+def _merge_widget_counts(target: Dict[str, Any], source: Dict[str, Any]) -> None:
+    for widget_name, widget_value in source.items():
+        if isinstance(widget_value, dict):
+            target_widget = target.get(widget_name)
+            if not isinstance(target_widget, dict):
+                target_widget = {}
+                target[widget_name] = target_widget
+            for selected_value, count in widget_value.items():
+                selected_key = str(selected_value)
+                target_widget[selected_key] = _coerce_int(target_widget.get(selected_key, 0)) + _coerce_int(count)
+        else:
+            target[widget_name] = _coerce_int(target.get(widget_name, 0)) + _coerce_int(widget_value)
+
+
+def _merge_analytics_snapshots(*snapshots: Dict[str, Any]) -> Dict[str, Any]:
+    merged = _empty_analytics_snapshot()
+    earliest_start = _parse_start_time(merged.get("start_time"))
+
+    for snapshot in snapshots:
+        if not isinstance(snapshot, dict):
+            continue
+
+        merged["total_pageviews"] += _coerce_int(snapshot.get("total_pageviews"))
+        merged["total_script_runs"] += _coerce_int(snapshot.get("total_script_runs"))
+        merged["total_time_seconds"] += float(snapshot.get("total_time_seconds", 0) or 0)
+
+        per_day = snapshot.get("per_day")
+        if isinstance(per_day, dict):
+            _merge_daily_counts(merged["per_day"], per_day)
+
+        widgets = snapshot.get("widgets")
+        if isinstance(widgets, dict):
+            _merge_widget_counts(merged["widgets"], widgets)
+
+        start_time = _parse_start_time(snapshot.get("start_time"))
+        if start_time is not None and (earliest_start is None or start_time < earliest_start):
+            earliest_start = start_time
+
+    if earliest_start is not None:
+        merged["start_time"] = earliest_start.strftime("%d %b %Y, %H:%M:%S")
+    return merged
+
+
+def _load_persisted_analytics_snapshot(path: Path) -> Dict[str, Any] | None:
+    if not path.exists():
+        return None
+
+    raw_text = path.read_text(encoding="utf-8").strip()
+    if not raw_text:
+        return None
+
+    try:
+        loaded = json.loads(raw_text)
+    except json.JSONDecodeError:
+        records: list[Dict[str, Any]] = []
+        for line in raw_text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(record, dict):
+                records.append(record)
+        if not records:
+            return None
+
+        snapshots: list[Dict[str, Any]] = []
+        for idx, record in enumerate(records):
+            if record.get(_PERSISTENCE_RECORD_TYPE_KEY) == _PERSISTENCE_RECORD_TYPE_SESSION:
+                snapshot = record.get("data")
+                if isinstance(snapshot, dict):
+                    snapshots.append(snapshot)
+            elif idx == 0:
+                snapshots.append(record)
+            else:
+                snapshots.append(record)
+        return _merge_analytics_snapshots(*snapshots)
+
+    if isinstance(loaded, dict):
+        if loaded.get(_PERSISTENCE_RECORD_TYPE_KEY) == _PERSISTENCE_RECORD_TYPE_SESSION:
+            session_snapshot = loaded.get("data")
+            if isinstance(session_snapshot, dict):
+                return _merge_analytics_snapshots(session_snapshot)
+            return None
+        return _merge_analytics_snapshots(loaded)
+
+    if isinstance(loaded, list):
+        snapshots = [item for item in loaded if isinstance(item, dict)]
+        if not snapshots:
+            return None
+        return _merge_analytics_snapshots(*snapshots)
+
+    return None
+
+
+def _append_session_snapshot(path: Path, session_snapshot: Dict[str, Any]) -> None:
+    record = {
+        _PERSISTENCE_RECORD_TYPE_KEY: _PERSISTENCE_RECORD_TYPE_SESSION,
+        "recorded_at": datetime.datetime.now().isoformat(),
+        "data": session_snapshot,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as file_handle:
+        file_handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True))
+        file_handle.write("\n")
+
+
+def _persist_analytics_snapshot(path: Path, snapshot: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as file_handle:
+        json.dump(snapshot, file_handle)
 
 
 def update_session_stats(data_dict: Dict[str, Any]):
@@ -55,10 +231,15 @@ def update_session_stats(data_dict: Dict[str, Any]):
         now - st.session_state.last_time
     ).total_seconds()
     st.session_state.last_time = now
+    # Track not including refresh
     if not st.session_state.user_tracked:
         st.session_state.user_tracked = True
         data_dict["total_pageviews"] += 1
         data_dict["per_day"]["pageviews"][-1] += 1
+    # Count each script pass as a pageview so browser refreshes are reflected.
+    # data_dict["total_pageviews"] += 1
+    # data_dict["per_day"]["pageviews"][-1] += 1
+    # st.session_state.user_tracked = True
 
 
 def _track_user():
@@ -128,15 +309,13 @@ def start_tracking(
             print()
 
     if load_from_json is not None:
+        # The txt-backed store is a cumulative snapshot, so refreshes/reopens
+        # can be reflected immediately by rewriting it after tracking starts.
         log_msg_prefix = "Loading data from json: "
         try:
-            # Using Path's read_text method simplifies file reading
-            json_contents = Path(load_from_json).read_text()
-            json_data = json.loads(json_contents)
-
-            # Use dict.update() for a cleaner way to merge the data
-            # This assumes you want json_data to overwrite existing keys in data
-            data.update({k: json_data[k] for k in json_data if k in data})
+            snapshot = _load_persisted_analytics_snapshot(Path(load_from_json))
+            if snapshot is not None:
+                data.update(snapshot)
 
             if verbose:
                 logging.info(f"{log_msg_prefix}{load_from_json}")
@@ -160,6 +339,11 @@ def start_tracking(
     if "last_time" not in st.session_state:
         st.session_state.last_time = datetime.datetime.now()
     _track_user()
+
+    # Persist immediately so a new browser/session updates the stored pageview
+    # count even before a clean shutdown occurs.
+    if load_from_json is not None:
+        _persist_analytics_snapshot(Path(load_from_json), data)
 
     # widgets.monkey_patch()
     # Monkey-patch streamlit to call the wrappers above.
@@ -353,15 +537,7 @@ def stop_tracking(
     # Assuming 'data' is your data to be saved and 'save_to_json' is the path
     # to your json file.
     if save_to_json is not None:
-        # Create a Path object for the file
-        file_path = Path(save_to_json)
-
-        # Ensure the directory containing the file exists
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Open the file and dump the json data
-        with file_path.open("w") as f:
-            json.dump(data, f)
+        _persist_analytics_snapshot(Path(save_to_json), data)
 
         if verbose:
             print("Storing results to file:", save_to_json)
@@ -374,13 +550,7 @@ def stop_tracking(
         @st.dialog("Streamlit-Analytics2", width="large")
         def show_sa2(data, reset_data, unsafe_password):
 
-            tab1, tab2 = st.tabs(["Data", "Config"])
-
-            with tab1:
-                display.show_results(data, reset_data, unsafe_password)
-
-            with tab2:
-                config.show_config()
+            display.show_results(data, reset_data, unsafe_password)
 
         show_sa2(data, reset_data, unsafe_password)
 
