@@ -66,7 +66,7 @@ def plot_variants_combined(
                     hover_tmpl = (
                         "<b>%{customdata[2]}</b>"
                         "<br><b>Date:</b> %{x}"
-                        "<br><b>Value:</b> %{y:.2f}"
+                        "<br><b>Value:</b> %{y:.0f}"
                         "<extra></extra>"
                     )
                 else:
@@ -75,7 +75,7 @@ def plot_variants_combined(
                         "<br><span style='font-size:14px'><b>Machine:</b> %{customdata[1]}</span>"
                         "<br><br><b>%{customdata[2]}</b>"
                         "<br><b>Date:</b> %{x}"
-                        "<br><b>Value:</b> %{y:.2f}"
+                        "<br><b>Value:</b> %{y:.0f}"
                         "<extra></extra>"
                     )
                 fig.add_trace(
@@ -103,7 +103,7 @@ def plot_variants_combined(
                 hover_tmpl = (
                     "<b>%{customdata[2]}</b>"
                     "<br><b>Date:</b> %{x}"
-                    "<br><b>Value:</b> %{y:.2f}"
+                    "<br><b>Value:</b> %{y:.0f}"
                     "<extra></extra>"
                 )
             else:
@@ -112,7 +112,7 @@ def plot_variants_combined(
                     "<br><span style='font-size:14px'><b>Machine:</b> %{customdata[1]}</span>"
                     "<br><br><b>%{customdata[2]}</b>"
                     "<br><b>Date:</b> %{x}"
-                    "<br><b>Value:</b> %{y:.2f}"
+                    "<br><b>Value:</b> %{y:.0f}"
                     "<extra></extra>"
                 )
             fig.add_trace(
@@ -154,13 +154,13 @@ def plot_variants_combined(
                 fig.add_hline(
                     y=max_thr,
                     line=dict(color="#d62728", dash="dot"),
-                    annotation_text=f"Max {max_thr:.2f}",
+                    annotation_text=f"Max {max_thr:.0f}",
                     annotation_position="top right",
                 )
                 fig.add_hline(
                     y=min_thr,
                     line=dict(color="#2ca02c", dash="dot"),
-                    annotation_text=f"Min {min_thr:.2f}",
+                    annotation_text=f"Min {min_thr:.0f}",
                     annotation_position="bottom right",
                 )
 
