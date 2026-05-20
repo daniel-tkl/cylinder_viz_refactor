@@ -11,7 +11,6 @@ from src.cylinder_domain.aggregation import (
     build_machine_module_cache,
     build_variant_group_plan,
     prepare_aggregation_frame,
-    resolve_motion_time_columns,
 )
 from src.cylinder_domain.parsing import ParseResult
 from .table_state import new_table_list_view
@@ -21,6 +20,31 @@ def _series_values(series: pd.Series | None) -> tuple[float | int | str | None, 
     if series is None:
         return None
     return tuple(series.tolist())
+
+
+def _resolve_family_display_columns(
+    items_in_group: list[tuple[str, str]],
+    method_map: dict[str, str],
+) -> tuple[str | None, str | None, str | None]:
+    min_col: str | None = None
+    avg_col: str | None = None
+    max_col: str | None = None
+
+    for _, col_name in items_in_group:
+        method = method_map.get(col_name)
+        if method == "min" and min_col is None:
+            min_col = col_name
+        elif method == "average" and avg_col is None:
+            avg_col = col_name
+        elif method == "max" and max_col is None:
+            max_col = col_name
+
+    available_columns = [col_name for _, col_name in items_in_group]
+    if avg_col is None and available_columns:
+        # Fallback for families without explicit "average" variant.
+        avg_col = available_columns[0]
+
+    return min_col, avg_col, max_col
 
 
 @st.cache_data(show_spinner=False)
@@ -76,13 +100,15 @@ def build_table_dataframe_cached(
             )
 
             title_base = f"{module} / {item}"
-            motion_cols = resolve_motion_time_columns(variants_map)
-
             for family_label, items_in_group in plan.groups.items():
                 variant_names = [variant_name for variant_name, _ in items_in_group]
                 variant_columns = [col_name for _, col_name in items_in_group]
                 if not variant_columns:
                     continue
+                family_min_col, family_avg_col, family_max_col = _resolve_family_display_columns(
+                    items_in_group=items_in_group,
+                    method_map=plan.method_map,
+                )
 
                 title = (
                     f"{title_base} / {family_label}"
@@ -119,22 +145,22 @@ def build_table_dataframe_cached(
                         list_view["Daily Dates"].append(tuple(per_machine_res.daily.index.tolist()))
 
                         list_view["Avg"].append(
-                            per_machine_res.baselines.get(motion_cols.avg_col) if motion_cols.avg_col else None
+                            per_machine_res.baselines.get(family_avg_col) if family_avg_col else None
                         )
                         list_view["Min"].append(
-                            per_machine_res.baselines.get(motion_cols.min_col) if motion_cols.min_col else None
+                            per_machine_res.baselines.get(family_min_col) if family_min_col else None
                         )
                         list_view["Max"].append(
-                            per_machine_res.baselines.get(motion_cols.max_col) if motion_cols.max_col else None
+                            per_machine_res.baselines.get(family_max_col) if family_max_col else None
                         )
                         list_view["Daily Min"].append(
-                            _series_values(per_machine_res.daily.get(motion_cols.min_col)) if motion_cols.min_col else None
+                            _series_values(per_machine_res.daily.get(family_min_col)) if family_min_col else None
                         )
                         list_view["Daily Avg"].append(
-                            _series_values(per_machine_res.daily.get(motion_cols.avg_col)) if motion_cols.avg_col else None
+                            _series_values(per_machine_res.daily.get(family_avg_col)) if family_avg_col else None
                         )
                         list_view["Daily Max"].append(
-                            _series_values(per_machine_res.daily.get(motion_cols.max_col)) if motion_cols.max_col else None
+                            _series_values(per_machine_res.daily.get(family_max_col)) if family_max_col else None
                         )
                         list_view["Result"].append("NG" if is_over_threshold else "OK")
 

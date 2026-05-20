@@ -170,11 +170,28 @@ def plot_variants_combined(
         yaxis_title="Value",
         showlegend=False,
         hovermode="x unified",
+        paper_bgcolor="rgba(12, 26, 48, 0.30)",
+        plot_bgcolor="rgba(15, 32, 58, 0.24)",
+        font=dict(color="#EAF6FF"),
         hoverlabel=dict(
-            bgcolor="rgba(0,0,0,0.75)",
-            bordercolor="#cccccc",
-            font=dict(size=12),
+            bgcolor="rgba(7,16,32,0.92)",
+            bordercolor="rgba(92,197,205,0.55)",
+            font=dict(size=12, color="#EAF6FF"),
         ),
     )
-    fig.update_xaxes(tickformat="%Y-%m-%d")
+    fig.update_xaxes(
+        tickformat="%Y-%m-%d",
+        showgrid=False,
+        zeroline=False,
+        linecolor="rgba(92, 197, 205, 0.35)",
+        tickfont=dict(color="#D8ECFF"),
+        title_font=dict(color="#D8ECFF"),
+    )
+    fig.update_yaxes(
+        showgrid=False,
+        zeroline=False,
+        linecolor="rgba(92, 197, 205, 0.35)",
+        tickfont=dict(color="#D8ECFF"),
+        title_font=dict(color="#D8ECFF"),
+    )
     return fig

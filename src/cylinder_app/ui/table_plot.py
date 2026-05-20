@@ -45,16 +45,17 @@ def build_selected_timeseries_figure(
     )
 
     fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            y=selected_viz["max"],
-            x=selected_viz["Date"],
-            mode="lines+markers",
-            customdata=customdata,
-            marker=dict(color="red"),
-            hovertemplate=hover_tmpl_max,
+    if pd.to_numeric(selected_viz["max"], errors="coerce").notna().any():
+        fig.add_trace(
+            go.Scatter(
+                y=selected_viz["max"],
+                x=selected_viz["Date"],
+                mode="lines+markers",
+                customdata=customdata,
+                marker=dict(color="red"),
+                hovertemplate=hover_tmpl_max,
+            )
         )
-    )
     fig.add_trace(
         go.Scatter(
             y=selected_viz["avg"],
@@ -65,16 +66,17 @@ def build_selected_timeseries_figure(
             hovertemplate=hover_tmpl_avg,
         )
     )
-    fig.add_trace(
-        go.Scatter(
-            y=selected_viz["min"],
-            x=selected_viz["Date"],
-            mode="lines+markers",
-            customdata=customdata,
-            marker=dict(color="cyan"),
-            hovertemplate=hover_tmpl_min,
+    if pd.to_numeric(selected_viz["min"], errors="coerce").notna().any():
+        fig.add_trace(
+            go.Scatter(
+                y=selected_viz["min"],
+                x=selected_viz["Date"],
+                mode="lines+markers",
+                customdata=customdata,
+                marker=dict(color="cyan"),
+                hovertemplate=hover_tmpl_min,
+            )
         )
-    )
 
     threshold_max_value = selected_row["Threshold_Max"]
     threshold_min_value = selected_row["Threshold_Min"]
@@ -113,10 +115,13 @@ def build_selected_timeseries_figure(
         yaxis_title="Value",
         showlegend=False,
         hovermode="x unified",
+        paper_bgcolor="rgba(12, 26, 48, 0.30)",
+        plot_bgcolor="rgba(15, 32, 58, 0.24)",
+        font=dict(color="#EAF6FF"),
         hoverlabel=dict(
-            bgcolor="rgba(0,0,0,0.75)",
-            bordercolor="#cccccc",
-            font=dict(size=12),
+            bgcolor="rgba(7,16,32,0.92)",
+            bordercolor="rgba(92,197,205,0.55)",
+            font=dict(size=12, color="#EAF6FF"),
         ),
         title={
             "text": f"{customdata[0][0]}",
@@ -127,7 +132,21 @@ def build_selected_timeseries_figure(
             "font": dict(size=24, color="white"),
         },
     )
+    fig.update_xaxes(
+        tickformat="%Y-%m-%d",
+        showgrid=False,
+        zeroline=False,
+        linecolor="rgba(92, 197, 205, 0.35)",
+        tickfont=dict(color="#D8ECFF"),
+        title_font=dict(color="#D8ECFF"),
+    )
+    fig.update_yaxes(
+        showgrid=False,
+        zeroline=False,
+        linecolor="rgba(92, 197, 205, 0.35)",
+        tickfont=dict(color="#D8ECFF"),
+        title_font=dict(color="#D8ECFF"),
+    )
     if point_count <= 4:
         fig.update_layout(width=max(420, 220 + (point_count * 140)))
-    fig.update_xaxes(tickformat="%Y-%m-%d")
     return fig

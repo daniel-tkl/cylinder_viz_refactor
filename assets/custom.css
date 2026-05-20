@@ -53,6 +53,34 @@ font="sans serif" */
     letter-spacing: normal !important;
 }
 
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"] button,
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stSidebarCollapseButton"] button {
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 1002 !important;
+}
+
+[data-testid="collapsedControl"] button,
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stSidebarCollapseButton"] button {
+    color: #eaf6ff !important;
+    background: linear-gradient(180deg, rgb(9 21 42 / 92%), rgb(8 19 37 / 92%)) !important;
+    border: 1px solid rgb(92 197 205 / 34%) !important;
+    box-shadow: 0 0 0 1px rgb(92 197 205 / 14%), 0 6px 14px rgb(0 0 0 / 36%) !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="collapsedControl"] button:hover,
+[data-testid="stSidebarCollapsedControl"] button:hover,
+[data-testid="stSidebarCollapseButton"] button:hover {
+    border-color: rgb(92 197 205 / 58%) !important;
+    box-shadow: 0 0 0 1px rgb(92 197 205 / 28%), 0 8px 16px rgb(0 0 0 / 42%) !important;
+}
+
 .stApp {
     font-size: 15px;
     line-height: 1.4;
@@ -106,37 +134,246 @@ section[data-testid="stFileUploader"] [data-testid="stWidgetLabel"] p:not(:first
 } */
 
 /* Sidebar */
-[data-testid="stSidebar"] {
-    visibility: visible !important;
-    transform: none !important;
-}
-
-[data-testid="stSidebar"][aria-expanded="false"],
 [data-testid="stSidebar"][aria-expanded="true"] {
     min-width: 20rem !important;
     max-width: 20rem !important;
-    transform: translateX(0) !important;
+}
+
+[data-testid="stSidebar"] {
+    min-height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgb(9 21 42 / 94%), rgb(8 19 37 / 94%));
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    visibility: visible !important;
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background:
+        radial-gradient(circle at 10% 8%, rgb(92 197 205 / 16%), rgb(7 16 32 / 0) 36%),
+        radial-gradient(circle at 94% 4%, rgb(92 197 205 / 9%), rgb(7 16 32 / 0) 34%),
+        linear-gradient(164deg, #060f1f 0%, #0a1830 50%, #08142b 100%);
+    border-right: 1px solid rgb(92 197 205 / 26%);
+    box-shadow: inset -1px 0 0 rgb(92 197 205 / 16%), 0 0 28px rgb(0 0 0 / 34%);
+}
+
+[data-testid="stSidebar"] > div:first-child::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.38;
+    background:
+        linear-gradient(150deg, rgb(92 197 205 / 12%) 0 1px, rgb(92 197 205 / 0) 1px),
+        linear-gradient(30deg, rgb(92 197 205 / 10%) 0 1px, rgb(92 197 205 / 0) 1px),
+        repeating-linear-gradient(
+            150deg,
+            rgb(92 197 205 / 0) 0,
+            rgb(92 197 205 / 0) 34px,
+            rgb(92 197 205 / 10%) 35px,
+            rgb(92 197 205 / 0) 36px
+        ),
+        repeating-linear-gradient(
+            30deg,
+            rgb(92 197 205 / 0) 0,
+            rgb(92 197 205 / 0) 34px,
+            rgb(92 197 205 / 8%) 35px,
+            rgb(92 197 205 / 0) 36px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            rgb(92 197 205 / 0) 0,
+            rgb(92 197 205 / 0) 63px,
+            rgb(92 197 205 / 5%) 64px,
+            rgb(92 197 205 / 0) 65px
+        );
+    background-size: 140px 140px, 140px 140px, 140px 140px, 140px 140px, auto;
+    background-position: 0 0, 0 0, -12px 0, 12px 0, 0 0;
+}
+
+[data-testid="stSidebar"] > div:first-child::after {
+    /* Top neon overlay intentionally disabled per request. */
+    content: none;
 }
 
 .appview-container > section:nth-child(1) {
-    background-color: #2E3D63;
+    background: linear-gradient(180deg, rgb(9 21 42 / 94%), rgb(8 19 37 / 94%));
 }
 .appview-container > section:nth-child(1) > div > div:nth-child(2) {
     padding: 1rem 1rem 1.5rem;
 }
-.appview-container > section:nth-child(1) > div 
-[data-testid="stVerticalBlock"] [data-testid="stImage"] > img {
-    width: 120px;
+
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
+    color: #d8ecff;
+    letter-spacing: 0.02em;
+}
+
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
+[data-testid="stSidebar"] div[role="heading"] {
+    margin: 0 0 0.9rem !important;
+    padding: 0.5rem 0.7rem !important;
+    text-align: left !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1.2 !important;
+    font-size: 1.02rem !important;
+    font-weight: 700 !important;
+    color: #eaf6ff !important;
+    background: linear-gradient(180deg, rgb(11 25 47 / 90%), rgb(9 20 38 / 88%));
+    border: 1px solid rgb(92 197 205 / 38%);
+    border-left: 3px solid rgb(92 197 205 / 60%);
+    border-radius: 0.45rem;
+    box-shadow: inset 0 0 0 1px rgb(92 197 205 / 10%);
+}
+
+[data-testid="stSidebar"] h2::after,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2::after,
+[data-testid="stSidebar"] div[role="heading"]::after {
+    display: none !important;
+}
+
+[data-testid="stSidebar"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-baseweb="base-input"] > div {
+    background: linear-gradient(180deg, rgb(11 25 47 / 88%), rgb(9 20 38 / 88%));
+    border: 1px solid rgb(92 197 205 / 24%);
+    box-shadow: inset 0 0 0 1px rgb(92 197 205 / 8%);
+}
+
+[data-testid="stSidebar"] .stNumberInput > div > div {
+    background: linear-gradient(180deg, rgb(11 25 47 / 88%), rgb(9 20 38 / 88%));
+    border: 1px solid rgb(92 197 205 / 24%);
+    box-shadow: inset 0 0 0 1px rgb(92 197 205 / 8%);
+    border-radius: 0.4rem;
+}
+
+[data-testid="stSidebar"] .stNumberInput [data-baseweb="input"] > div {
+    background: linear-gradient(180deg, rgb(11 25 47 / 88%), rgb(9 20 38 / 88%));
+    border: 1px solid rgb(92 197 205 / 24%) !important;
+    box-shadow: inset 0 0 0 1px rgb(92 197 205 / 8%);
+    border-radius: 0.4rem;
+}
+
+[data-testid="stSidebar"] [data-baseweb="select"] > div:hover,
+[data-testid="stSidebar"] .stNumberInput > div > div:hover,
+[data-testid="stSidebar"] [data-baseweb="base-input"] > div:hover {
+    border-color: rgb(92 197 205 / 42%);
+}
+
+[data-testid="stSidebar"] .stNumberInput > div > div:hover {
+    box-shadow: inset 0 0 0 1px rgb(92 197 205 / 10%);
+}
+
+[data-testid="stSidebar"] .stNumberInput [data-baseweb="input"] > div:hover {
+    border-color: rgb(92 197 205 / 42%) !important;
+}
+
+[data-testid="stSidebar"] .stNumberInput .focused {
+    border-color: rgb(92 197 205 / 42%) !important;
+    border-width: 1px !important;
 }
 
 /* Content */
 .appview-container > section[tabindex="0"] {
-    background-color: #182136;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: visible;
+    background-color: rgb(10 20 40 / 31%);
     /* background: bottom right/contain no-repeat url(/assets/images/img_support.svg); */
+}
+
+[data-testid="stMain"] {
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: visible;
+    background-color: rgb(10 20 40 / 31%) !important;
+}
+
+.appview-container > section[tabindex="0"]::before,
+[data-testid="stMain"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.17;
+    z-index: 0;
+    background:
+        linear-gradient(150deg, rgb(8 18 36 / 0%), rgb(8 18 36 / 41%) 62%, rgb(8 18 36 / 52%) 100%),
+        radial-gradient(circle at 16% 8%, rgb(92 197 205 / 28%), rgb(24 33 54 / 0) 32%),
+        radial-gradient(circle at 86% 0%, rgb(92 197 205 / 18%), rgb(24 33 54 / 0) 30%),
+        repeating-linear-gradient(
+            60deg,
+            rgb(92 197 205 / 0) 0,
+            rgb(92 197 205 / 0) 27px,
+            rgb(92 197 205 / 14%) 28px,
+            rgb(92 197 205 / 0) 29px
+        ),
+        repeating-linear-gradient(
+            -60deg,
+            rgb(92 197 205 / 0) 0,
+            rgb(92 197 205 / 0) 27px,
+            rgb(92 197 205 / 11%) 28px,
+            rgb(92 197 205 / 0) 29px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            rgb(92 197 205 / 0) 0,
+            rgb(92 197 205 / 0) 95px,
+            rgb(92 197 205 / 9%) 96px,
+            rgb(92 197 205 / 0) 97px
+        );
+    background-size: auto, auto, auto, 112px 112px, 112px 112px, auto;
+}
+
+.appview-container > section[tabindex="0"]::after,
+[data-testid="stMain"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.14;
+    background:
+        linear-gradient(104deg, rgb(92 197 205 / 0) 30%, rgb(92 197 205 / 26%) 50%, rgb(92 197 205 / 0) 70%),
+        repeating-linear-gradient(
+            180deg,
+            rgb(92 197 205 / 0) 0,
+            rgb(92 197 205 / 0) 3px,
+            rgb(92 197 205 / 12%) 4px,
+            rgb(92 197 205 / 0) 5px
+        );
+}
+
+[data-testid="stAppViewContainer"] .main {
+    position: relative;
+    background-color: rgb(10 20 40 / 26%);
+}
+
+[data-testid="stMain"] > div {
+    position: relative;
+    background: transparent !important;
+}
+
+[data-testid="stAppViewContainer"] .main::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.14;
+    background:
+        linear-gradient(180deg, rgb(9 20 38 / 34%), rgb(9 20 38 / 14%) 45%, rgb(9 20 38 / 30%) 100%),
+        linear-gradient(120deg, rgb(92 197 205 / 0), rgb(92 197 205 / 20%), rgb(92 197 205 / 0));
+}
+
+[data-testid="stAppViewContainer"] .main .block-container {
+    position: relative;
+    z-index: 1;
+}
+[data-testid="stMainBlockContainer"] {
+    position: relative;
+    z-index: 1;
+    background: transparent !important;
 }
 .appview-container > section[tabindex="0"] .block-container {
     padding: 2.4rem 4rem 4rem;
@@ -170,31 +407,35 @@ section[data-testid="stFileUploader"] [data-testid="stWidgetLabel"] p:not(:first
 }
 
 .app-title {
-    margin: 0 !important;
-    margin-block-start: 0 !important;
-    margin-block-end: 0.8rem !important;
-    position: relative !important;
-    top: -2.8rem !important;
+    margin: -6rem 0 0.9rem !important;
     text-align: center;
-    letter-spacing: 0.07em;
-    line-height: 1.1;
-    font-size: clamp(1.8rem, 1.2rem + 1.35vw, 2.55rem);
-    font-weight: 700;
+    letter-spacing: 0.055em;
+    line-height: 1.15;
+    font-size: clamp(1.85rem, 1.2rem + 1.4vw, 2.6rem);
+    font-weight: 650;
     font-family: var(--font-heading) !important;
-    text-transform: uppercase;
-    color: #F7FBFF;
-    text-shadow: 0 0 12px rgb(92 197 205 / 55%);
+    text-transform: none;
+    color: #EAF6FF;
+    text-shadow: 0 0 8px rgb(92 197 205 / 34%);
+    pointer-events: none;
 }
 
 .app-title span {
-    display: inline-block;
-    padding: 0.24rem 0.95rem 0.34rem;
-    border: 1px solid rgb(92 197 205 / 52%);
-    border-bottom-color: rgb(92 197 205 / 72%);
-    background: linear-gradient(180deg, rgb(17 31 53 / 62%), rgb(17 31 53 / 38%));
-    box-shadow: inset 0 0 0 1px rgb(92 197 205 / 10%);
-    border-radius: 999px;
-    position: relative;
+    display: inline;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.app-title::after {
+    content: "";
+    display: block;
+    width: clamp(140px, 22vw, 260px);
+    height: 1px;
+    margin: 0.4rem auto 0;
+    background: linear-gradient(90deg, rgb(92 197 205 / 0%), rgb(92 197 205 / 58%), rgb(92 197 205 / 0%));
 }
 
 [data-testid="stMarkdownContainer"] h2 {
@@ -279,7 +520,7 @@ button[kind="secondary"]:focus:active {
 }
 /* Input Number */
 .stNumberInput .focused {
-    border-color: #FF7F00 !important;
+    border-color: rgb(92 197 205 / 62%) !important;
 }
 button.step-up:hover:enabled, button.step-down:hover:enabled,
 button.step-up:focus:enabled, button.step-down:focus:enabled {
@@ -360,8 +601,76 @@ button.step-up:focus:enabled, button.step-down:focus:enabled {
     padding: 8px;
 }
 /* Upload */
-section[data-testid="stFileUploadDropzone"] {
-    background-color: #2E3D63;
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"],
+[data-testid="stFileUploaderDropzone"],
+[data-testid="stFileUploadDropzone"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] > div,
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"] > div {
+    background: linear-gradient(180deg, rgb(21 34 64 / 82%), rgb(16 28 52 / 82%));
+    border: 1px solid rgb(92 197 205 / 55%) !important;
+    box-shadow:
+        0 0 0 1px rgb(92 197 205 / 26%),
+        0 0 16px rgb(92 197 205 / 24%),
+        inset 0 0 0 2px rgb(92 197 205 / 12%);
+    border-radius: 10px;
+    transition: border-color 150ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"]:hover,
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"]:focus-within,
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"]:active,
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"][data-dragging="true"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"][data-state="dragover"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"][aria-dropeffect="copy"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"]:hover,
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"]:focus-within,
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"]:active,
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"][data-dragging="true"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"][data-state="dragover"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"][aria-dropeffect="copy"],
+[data-testid="stFileUploaderDropzone"]:hover,
+[data-testid="stFileUploaderDropzone"]:focus-within,
+[data-testid="stFileUploaderDropzone"]:active,
+[data-testid="stFileUploaderDropzone"][data-dragging="true"],
+[data-testid="stFileUploaderDropzone"][data-state="dragover"],
+[data-testid="stFileUploaderDropzone"][aria-dropeffect="copy"],
+[data-testid="stFileUploadDropzone"]:hover,
+[data-testid="stFileUploadDropzone"]:focus-within,
+[data-testid="stFileUploadDropzone"]:active,
+[data-testid="stFileUploadDropzone"][data-dragging="true"],
+[data-testid="stFileUploadDropzone"][data-state="dragover"],
+[data-testid="stFileUploadDropzone"][aria-dropeffect="copy"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] > div:hover,
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] > div:focus-within,
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] > div:active,
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] > div[data-dragging="true"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] > div[data-state="dragover"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] > div[aria-dropeffect="copy"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"] > div:hover,
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"] > div:focus-within,
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"] > div:active,
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"] > div[data-dragging="true"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"] > div[data-state="dragover"],
+section[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"] > div[aria-dropeffect="copy"] {
+    border-color: rgb(255 127 0 / 78%) !important;
+    box-shadow:
+        0 0 0 1px rgb(255 127 0 / 36%),
+        0 0 22px rgb(255 127 0 / 34%),
+        inset 0 0 0 2px rgb(255 127 0 / 20%);
+}
+
+/* Fallback: some Streamlit builds expose drag state only on the uploader wrapper. */
+section[data-testid="stFileUploader"]:hover [data-testid*="Dropzone"],
+section[data-testid="stFileUploader"]:focus-within [data-testid*="Dropzone"],
+section[data-testid="stFileUploader"]:active [data-testid*="Dropzone"],
+section[data-testid="stFileUploader"] [data-testid*="Dropzone"][class*="drag"],
+section[data-testid="stFileUploader"] [data-testid*="Dropzone"][style*="border-color"] {
+    border-color: rgb(255 127 0 / 78%) !important;
+    box-shadow:
+        0 0 0 1px rgb(255 127 0 / 36%),
+        0 0 22px rgb(255 127 0 / 34%),
+        inset 0 0 0 2px rgb(255 127 0 / 20%) !important;
 }
 /* Select */
 [data-baseweb="select"] > div {
