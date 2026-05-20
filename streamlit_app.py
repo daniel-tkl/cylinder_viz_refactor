@@ -28,7 +28,8 @@ from src.shared.perf import render_perf_panel, reset_perf_metrics
 DEFAULTS: DefaultConfigs = DefaultConfigs()
 LOGS_DIR = Path("logs")
 APP_LOG_DIR = LOGS_DIR / "app"
-USAGE_LOG_PATH = LOGS_DIR / "usage" / "usage_log_2026-05-15.txt"
+USAGE_LOG_DIR = LOGS_DIR / "usage"
+USAGE_LOG_PATH = USAGE_LOG_DIR / f"usage_{datetime.now().strftime('%Y%m%d')}.log"
 logger = logging.getLogger(__name__)
 
 
