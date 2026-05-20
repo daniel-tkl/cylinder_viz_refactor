@@ -7,6 +7,7 @@ import streamlit as st
 
 from src.config import DefaultConfigs
 from src.cylinder_domain.parsing import ParseResult
+from src.shared.view import set_sidebar_img
 
 from src.cylinder_app.state.options import (
     DISPLAY_OPTIONS,
@@ -53,6 +54,7 @@ def build_model_selection(
 def build_base_sidebar_controls(
     defaults: DefaultConfigs,
 ) -> tuple[ThresholdState, ViewMode, str, int]:
+    set_sidebar_img()
     st.sidebar.title("Filter Controls")
 
     max_threshold_pct = st.sidebar.number_input(

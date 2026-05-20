@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 
@@ -55,17 +56,27 @@ def build_selected_row_payload(selected_event: Any, df_all: pd.DataFrame) -> tup
     daily_min_values = selected_row["Daily Min"]
     daily_max_values = selected_row["Daily Max"]
 
-    if not all(isinstance(values, (list, tuple)) for values in (daily_dates, daily_avg_values, daily_min_values, daily_max_values)):
+    if not isinstance(daily_dates, (list, tuple)) or not isinstance(daily_avg_values, (list, tuple)):
         return None
     if not daily_dates or not daily_avg_values:
         return None
 
+    point_count = len(daily_dates)
+
+    def _normalize_optional_series(values: Any) -> list[float]:
+        if isinstance(values, (list, tuple)) and len(values) == point_count:
+            return list(values)
+        return [np.nan] * point_count
+
+    normalized_min = _normalize_optional_series(daily_min_values)
+    normalized_max = _normalize_optional_series(daily_max_values)
+
     selected_viz = pd.DataFrame(
         {
             "Date": list(daily_dates),
-            "min": list(daily_min_values),
+            "min": normalized_min,
             "avg": list(daily_avg_values),
-            "max": list(daily_max_values),
+            "max": normalized_max,
             "equipment": selected_row["Equipment"],
         }
     )
