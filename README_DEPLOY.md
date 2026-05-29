@@ -1,24 +1,3 @@
-## Quick Start for Hostname Access (port 80)
-
-If you want users to access the app via a DNS name (e.g., http://cylviz.local) on port 80:
-
-### 1) Choose a hostname (example: cylviz.local)
-
-### 2) Point DNS or hosts file to your server IP
-- Add a DNS A record for cylviz.local → <SERVER_IP>
-- Or, on each client, add to C:\Windows\System32\drivers\etc\hosts:
-  <SERVER_IP>  cylviz.local
-
-### 3) Configure IIS reverse proxy with host header
-.\deploy_iis_reverse_proxy.ps1 -SiteName CylinderVizProxy -PublicPort 80 -HostHeader "cylviz.local" -AppRoot E:\apps\cylinder_viz_refactor -StreamlitPort 8501
-
-### 4) Verify from client
-Open in browser:
-- http://cylviz.local
-
-Note: If port 80 is already used by another IIS site, you must either stop that site or use a different SiteName/HostHeader combination.
-# Deployment Summary (IIS + Streamlit on Windows Server Core, without NSSM)
-
 ## Goal
 Deploy the Streamlit app behind IIS reverse proxy on Windows Server Core without NSSM.
 
