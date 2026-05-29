@@ -5,7 +5,6 @@
 .vscode
 
 __pycache__
-scripts
 archive
 data
 logs
@@ -28,6 +27,5 @@ examples/app.py
 *.bat
 *.bkcp
 *.csv
-*.txt
 *.ipynb
 *.pyc

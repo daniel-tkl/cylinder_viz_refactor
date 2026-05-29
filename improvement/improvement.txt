@@ -1,0 +1,104 @@
+Production-ready architecture recommendation for 100+ concurrent users
+
+1) Core Direction
+- Keep Streamlit as stateless UI/app workers.
+- Move history/analytics out of local .txt files into shared services.
+- Run multiple app replicas behind a reverse proxy/load balancer.
+- Use centralized observability and controlled background processing.
+
+2) Recommended Stack
+- App tier: Streamlit replicas (containerized).
+- Data tier:
+  - PostgreSQL for durable history/events and aggregated metrics.
+  - Redis for short-lived cache/session/rate limiting/coordination locks.
+- Object storage: S3/Azure Blob/GCS for uploaded files (not local disk).
+- Proxy: Nginx/Traefik/Cloud LB.
+- Monitoring: Prometheus + Grafana, plus centralized logs (ELK/Loki/Cloud logging).
+
+3) Data Model for History Tracking
+Instead of one append-only text file, use event tables:
+
+- session_events
+  - event_id (UUID, PK)
+  - session_id
+  - user_id (or anonymous key)
+  - event_type (pageview, filter_change, upload, render)
+  - event_time (UTC)
+  - payload (JSONB)
+
+- daily_usage_agg (optional materialized/derived table)
+  - date
+  - app_id
+  - pageviews
+  - script_runs
+  - active_users
+
+Notes:
+- Write raw events fast.
+- Compute aggregates async (scheduled job or streaming consumer).
+- Keep idempotency key per event so retries do not double-count.
+
+4) Concurrency and Locking Model
+For robustness at scale:
+
+- DB writes:
+  - Use short transactions.
+  - Use unique constraints for idempotency (event_id or (session_id, sequence_no)).
+- Distributed locks:
+  - Use Redis locks only where needed (rare critical sections).
+  - Do not lock around normal per-event insert path.
+- Avoid file locks:
+  - No shared text append path in production.
+- Cache consistency:
+  - Cache read-heavy computed results in Redis with TTL.
+  - Invalidate on data change via version key pattern.
+
+5) Deployment Topology
+- Ingress/LB
+- 3 to N Streamlit replicas (horizontal autoscale)
+- Managed PostgreSQL (primary + replica)
+- Redis (managed, with persistence if needed)
+- Object storage for files
+- Worker service (Celery/RQ/Arq or lightweight cron job) for aggregation and cleanup
+
+Flow:
+- User opens app via LB.
+- Any replica handles request (no sticky-session dependency for correctness).
+- App logs event to PostgreSQL.
+- Heavy aggregation or daily rollups happen in worker.
+- Dashboards/metrics pull from aggregate table or materialized view.
+
+6) Performance Targets (Practical)
+For 100+ concurrent:
+- p95 UI response under 2-3s for normal interactions.
+- Event write latency under 100ms median.
+- Error rate below 1%.
+- App replica CPU under 70% sustained (autoscale threshold).
+
+7) Security and Reliability
+- TLS everywhere.
+- Secrets via vault/managed secret store, never in repo.
+- DB connection pooling (PgBouncer recommended).
+- Backups + PITR for PostgreSQL.
+- Health checks and readiness probes on app containers.
+- Graceful shutdown to avoid dropping in-flight events.
+
+8) Migration Plan from Current .txt Approach
+- Phase 1: Dual-write
+  - Keep existing .txt writes temporarily.
+  - Also write same event to PostgreSQL.
+- Phase 2: Read switch
+  - Analytics reads from PostgreSQL aggregates.
+- Phase 3: Remove file-based persistence
+  - Keep logs for diagnostics only, not as source of truth.
+
+9) Minimal Capacity Starting Point
+- Streamlit: 3 replicas, 1 vCPU / 1-2 GB RAM each (adjust by dataset size).
+- PostgreSQL: managed instance with 100-200 max connections plus pooling.
+- Redis: small managed node for cache + lightweight locks.
+- Autoscaling on CPU + request latency.
+
+Optional next deliverables:
+- Concrete PostgreSQL schema (DDL).
+- Locking/idempotency pattern for exact event types.
+- Step-by-step infra checklist for Azure, AWS, or on-prem Kubernetes.
