@@ -6,7 +6,7 @@ import streamlit as st
 
 from .assets import read_file_base64, read_text_file
 
-DEFAULT_SIDEBAR_IMAGE = "./assets/tkl_navbar.png"
+DEFAULT_SIDEBAR_IMAGE = "./assets/dx_logo.png"
 
 
 def local_css(file_name: str) -> None:
@@ -51,8 +51,8 @@ def set_sidebar_img(sidebar_img: str | None = DEFAULT_SIDEBAR_IMAGE) -> None:
     data = read_file_base64(sidebar_img)
     st.sidebar.markdown(
         f"""
-        <div style="display:table;margin-top:-40%;margin-left:25%;">
-            <img src="data:image/png;base64,{data}" width="100" height="150">
+        <div style="display:table;margin-top:0;margin-left:5%;">
+            <img src="data:image/png;base64,{data}" style="width:auto;height:auto;">
         </div>
         """,
         unsafe_allow_html=True,

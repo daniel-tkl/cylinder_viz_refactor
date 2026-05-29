@@ -1,0 +1,240 @@
+Production Blueprint: Flask + PostgreSQL App (Target: 50 Concurrent Users)
+Date: 2026-05-19
+Project: d:\stable
+
+============================================================
+1) Executive Recommendation
+============================================================
+Use Flask for backend API and frontend layer (server-rendered templates with Jinja) for now, then optionally move to React/Vue if UI complexity increases.
+
+Why this is the best fit for your requirement:
+- Better production control than Streamlit for multi-user web apps.
+- Cleaner architecture for auth, sessions, permissions, and transactional workflows.
+- Easier to scale and monitor predictably for 50 concurrent users.
+- Strong compatibility with PostgreSQL, migrations, and worker-based deployment.
+
+Keep Streamlit only for:
+- Internal admin dashboard
+- Analyst-facing exploration tools
+- Rapid prototyping
+
+============================================================
+2) Target Architecture (Robust + Stable)
+============================================================
+Client Browser
+  -> Nginx (TLS termination, static files, reverse proxy)
+    -> Gunicorn (Flask app workers)
+      -> Flask app (Blueprints, Services, Repositories)
+        -> PostgreSQL (primary database)
+        -> Redis (cache, background jobs, optional session store)
+
+Optional background tasks:
+- Celery/RQ worker process for long jobs (file processing, reporting, notifications)
+
+Core stack:
+- Python 3.11+
+- Flask + Flask-Login (or JWT auth for API)
+- SQLAlchemy + Alembic
+- PostgreSQL 15+
+- Gunicorn
+- Nginx
+- Redis (recommended)
+- Prometheus/Grafana or managed APM for monitoring
+
+============================================================
+3) High-Level Folder Strategy (Migration-Friendly)
+============================================================
+Suggested structure:
+
+src/
+  app/
+    __init__.py              # app factory
+    config.py                # env-specific config
+    extensions.py            # db, cache, login manager, etc.
+    routes/
+      web.py                 # server-rendered pages
+      api.py                 # JSON API endpoints
+    services/
+      cylinder_service.py    # business logic
+    repositories/
+      cylinder_repo.py       # DB queries
+    models/
+      cylinder.py            # SQLAlchemy models
+    templates/
+    static/
+  tasks/
+    worker_tasks.py
+
+migrations/                 # Alembic migrations
+scripts/
+  run_dev.ps1
+  run_prod.ps1
+
+This preserves your existing logic modules in src/cylinder_viz and src/utils by reusing them inside services.
+
+============================================================
+4) Concurrency and Capacity Plan for 50 Users
+============================================================
+Target assumptions:
+- Mix of short read requests and moderate compute per request.
+- 50 concurrent active users, peak bursts acceptable.
+
+Gunicorn baseline config:
+- workers: 4 (start here)
+- worker_class: gthread
+- threads: 4
+- timeout: 60
+- max_requests: 1000
+- max_requests_jitter: 100
+
+Example effective concurrency handling:
+- 4 workers x 4 threads = 16 active request slots per process layer.
+- With short request times and queueing at Nginx, this is usually enough for 50 concurrent users.
+- Scale to 6 workers if CPU and memory allow, after load testing.
+
+Important:
+- For CPU-heavy tasks, do not run in request thread. Move to background worker queue.
+
+============================================================
+5) PostgreSQL Production Practices
+============================================================
+Connection strategy:
+- Use SQLAlchemy engine pool with controlled limits.
+- Recommended initial values:
+  - pool_size=15
+  - max_overflow=10
+  - pool_timeout=30
+  - pool_recycle=1800
+  - pool_pre_ping=True
+
+If multiple app instances are used, add PgBouncer to avoid connection storms.
+
+Schema + migrations:
+- Use Alembic for all schema changes.
+- Never edit production schema manually.
+- Enforce constraints and indexes for query paths.
+
+Data safety:
+- Daily backups + point-in-time recovery if possible.
+- Test restore procedure monthly.
+
+============================================================
+6) Reliability and Robustness Checklist
+============================================================
+Application:
+- Use Flask app factory pattern.
+- Centralized error handlers (4xx/5xx).
+- Structured logging (JSON in production).
+- Request ID/correlation ID per request.
+- Input validation for every external input.
+- Strict timeout and retry policy on external calls.
+
+Security:
+- Secrets from environment variables or secret manager.
+- CSRF protection for forms.
+- Secure cookies, HttpOnly, SameSite.
+- Password hashing (argon2 or bcrypt).
+- Rate limiting for login and sensitive endpoints.
+
+Performance:
+- Cache expensive read queries (Redis).
+- Add DB indexes for top query filters/sorts.
+- Paginate list endpoints.
+- Avoid N+1 query patterns.
+
+Observability:
+- Health endpoint: /healthz
+- Readiness endpoint: /readyz
+- Basic metrics: latency, error rate, request throughput, DB latency.
+- Alerts for 5xx spikes and DB connection exhaustion.
+
+============================================================
+7) Migration Path from Current Streamlit App
+============================================================
+Phase 0: Stabilize current logic
+- Isolate pure business logic from Streamlit-specific UI code.
+- Keep parsing, aggregation, and visualization logic in reusable service modules.
+
+Phase 1: Build Flask shell
+- Create Flask app factory.
+- Add config profiles: development, staging, production.
+- Wire SQLAlchemy, Alembic, and logging.
+
+Phase 2: Recreate critical user flows
+- Replace Streamlit pages with Flask routes/templates.
+- Move state handling from Streamlit session state to server session + DB.
+- Add authentication and authorization.
+
+Phase 3: API and async jobs
+- Expose core operations via API routes.
+- Offload long-running jobs to Redis queue worker.
+
+Phase 4: Hardening
+- Add tests, load test with 50-user profile.
+- Add monitoring, alerts, and backup checks.
+- Deploy behind Nginx + Gunicorn.
+
+Phase 5: Optional UI enhancement
+- If UI grows complex, split frontend into SPA (React/Vue) using Flask as API.
+
+============================================================
+8) Testing Strategy (Must-Have for Stability)
+============================================================
+Test layers:
+- Unit tests: business logic in services and utils.
+- Integration tests: DB repositories with test PostgreSQL.
+- API tests: route behavior and auth.
+- Smoke tests: startup + core endpoint checks.
+- Load tests: k6/Locust for 50 concurrent users.
+
+Minimum acceptance targets before production:
+- 95th percentile response time under target threshold for key endpoints.
+- Error rate under 1% at 50 concurrent simulated users.
+- No DB pool exhaustion under load test.
+
+============================================================
+9) Deployment Blueprint
+============================================================
+Environment separation:
+- dev / staging / prod with separate DBs and secrets.
+
+Process model:
+- Nginx service
+- Flask app via Gunicorn service
+- Redis service
+- Worker service (Celery/RQ)
+
+Deployment steps:
+1. Pull release artifact.
+2. Install dependencies in isolated venv.
+3. Run Alembic migrations.
+4. Restart Gunicorn and workers with health checks.
+5. Run smoke tests.
+6. Monitor metrics for 15-30 minutes.
+
+Rollback plan:
+- Keep previous release artifact available.
+- Revert app version quickly.
+- Use backward-compatible DB migrations whenever possible.
+
+============================================================
+10) Concrete Next Steps for This Repository
+============================================================
+1. Create Flask app package under src/app with app factory and blueprints.
+2. Introduce SQLAlchemy models and Alembic migrations.
+3. Refactor streamlit_app.py logic into service functions reused by Flask routes.
+4. Add production config file and environment variable handling.
+5. Add Gunicorn config and Nginx sample config.
+6. Add basic auth and role checks.
+7. Add health/readiness endpoints.
+8. Implement load test scenario for 50 users.
+
+============================================================
+11) Decision Summary
+============================================================
+For your stated goal (stable, robust, 50 concurrent users, PostgreSQL, Flask backend), the better frontend direction is:
+- Flask-based web frontend now
+- Optional SPA frontend later if UX complexity demands it
+- Streamlit kept only as internal analytics/admin tool
+
+End of document.
