@@ -51,8 +51,8 @@ def set_sidebar_img(sidebar_img: str | None = DEFAULT_SIDEBAR_IMAGE) -> None:
     data = read_file_base64(sidebar_img)
     st.sidebar.markdown(
         f"""
-        <div style="display:table;margin-top:0;margin-left:5%;">
-            <img src="data:image/png;base64,{data}" style="width:auto;height:auto;">
+        <div style="display:table;margin-top:-30px;margin-bottom:30px;margin-left:25%;">
+            <img src="data:image/png;base64,{data}" style="width:70%;height:auto;display:block;">
         </div>
         """,
         unsafe_allow_html=True,
